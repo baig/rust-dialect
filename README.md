@@ -638,7 +638,7 @@ enum Foo {
 In haskell-style dialect of rust
 
 ```{.haskell}
-data Foo = Bar[123]
+data Foo = Bar<123>
 ```
 
 If a discriminant isn't assigned, they start at zero, and add one for
@@ -698,8 +698,9 @@ const BITS_N_STRINGS: BitsNStrings<'static> = BitsNStrings {
 };
 ```
 
-### [6.1.8 Static items](#static-items) {#static-items .section-header}
 
+Static items
+--------------------------------------------------------------------------------
 A *static item* is similar to a *constant*, except that it represents a
 precise memory location in the program. A static is never "inlined" at
 the usage site, and all references to it refer to the same memory
@@ -721,7 +722,8 @@ Constants should in general be preferred over statics, unless large
 amounts of data are being stored, or single-address and mutability
 properties are required.
 
-#### [6.1.8.1 Mutable statics](#mutable-statics) {#mutable-statics .section-header}
+
+### Mutable statics
 
 If a static item is declared with the `mut` keyword, then it is allowed
 to be modified by the program. One of Rust's goals is to make
@@ -758,8 +760,9 @@ unsafe fn bump_levels_unsafe2() -> u32 {
 Mutable statics have the same restrictions as normal statics, except
 that the type of the value is not required to ascribe to `Sync`.
 
-### [6.1.9 Traits](#traits) {#traits .section-header}
 
+Traits
+--------------------------------------------------------------------------------
 A *trait* describes an abstract interface that types can implement. This
 interface consists of associated items, which come in three varieties:
 
@@ -792,6 +795,14 @@ trait Shape {
 }
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+trait Shape =>
+    draw : &self -> Surface -> ()
+    bounding_box : &self -> BoundingBox
+```
+
 This defines a trait with two methods. All values that have
 [implementations](#implementations) of this trait in scope can have
 their `draw` and `bounding_box` methods called, using
@@ -804,6 +815,15 @@ trait Foo {
     fn bar(&self);
     fn baz(&self) { println!("We called baz."); }
 }
+```
+
+In haskell-style dialect of rust
+
+```{.haskell}
+trait Foo =>
+    bar : &self -> ()
+    baz : &self -> ()
+    baz = println! "We called baz."
 ```
 
 Here the `baz` method has a default implementation, so types that
@@ -823,6 +843,16 @@ trait Seq<T> {
 }
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+trait Seq T =>
+    len : &self -> u32
+    elt_at : &self -> u32 -> T
+    iter : Fn(T) F => &self -> F -> ()
+    baz = println! "We called baz."
+```
+
 It is also possible to define associated types for a trait. Consider the
 following example of a `Container` trait. Notice how the type is
 available for use in the method signatures:
@@ -833,6 +863,15 @@ trait Container {
     fn empty() -> Self;
     fn insert(&mut self, Self::E);
 }
+```
+
+In haskell-style dialect of rust
+
+```{.haskell}
+trait Container a =>
+    type E
+    empty : Self
+    insert : &*self -> Self::E -> ()
 ```
 
 In order for a type to implement this trait, it must not only provide
@@ -846,6 +885,15 @@ impl<T> Container for Vec<T> {
     fn empty() -> Vec<T> { Vec::new() }
     fn insert(&mut self, x: T) { self.push(x); }
 }
+```
+
+In haskell-style dialect of rust
+
+```{.haskell}
+impl Container (Vec T) =>
+    type E = T
+    empty = Vec.new
+    insert self x = self.push x
 ```
 
 Generic functions may use traits as *bounds* on their type parameters.
@@ -864,6 +912,14 @@ fn draw_twice<T: Shape>(surface: Surface, sh: T) {
 }
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+draw_twice : Shape T => Surface -> T -> ()
+draw_twice surface sh = sh.draw surface
+                        sh.draw surface
+```
+
 Traits also define an [trait object](#trait-objects) with the same name
 as the trait. Values of this type are created by coercing from a pointer
 of some specific type to a pointer of trait type. For example, `&T`
@@ -877,6 +933,15 @@ trait Shape { }
 impl Shape for i32 { }
 let mycircle = 0i32;
 let myshape: Box<Shape> = Box::new(mycircle) as Box<Shape>;
+```
+
+In haskell-style dialect of rust
+
+```{.haskell}
+trait Shape a =>
+impl Shape i32 =>
+let mycircle = 0i32
+let myshape = Box.new mycircle -> Box Shape
 ```
 
 The resulting value is a box containing the value that was cast, along
@@ -902,11 +967,31 @@ impl Num for f64 {
 let x: f64 = Num::from_i32(42);
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+trait Num a where
+    from_i32 : i32 -> a
+impl Num f64 =>
+    from_i32 n = n -> f64
+let x:f64 = Num.from_i32 42
+    
+```
+
 Traits may inherit from other traits. For example, in
 
 ``` {.rust .rust-example-rendered}
 trait Shape { fn area(&self) -> f64; }
 trait Circle : Shape { fn radius(&self) -> f64; }
+```
+
+In haskell-style dialect of rust
+
+```{.haskell}
+trait Shape where
+    area : &self -> f64
+trait Shape => Circle where
+    radius : &self -> f64
 ```
 
 the syntax `Circle : Shape` means that types that implement `Circle`
@@ -927,6 +1012,13 @@ fn radius_times_area<T: Circle>(c: T) -> f64 {
 }
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+radius_times_area : Circle T => T -> f64
+radius_times_area c = c.radius * c.area -- `c` is both a Circle and a Shape
+```
+
 Likewise, supertrait methods may also be called on trait objects.
 
 ``` {.rust .rust-example-rendered}
@@ -934,8 +1026,16 @@ let mycircle = Box::new(mycircle) as Box<Circle>;
 let nonsense = mycircle.radius() * mycircle.area();
 ```
 
-### [6.1.10 Implementations](#implementations) {#implementations .section-header}
+In haskell-style dialect of rust
 
+```{.haskell}
+let mycricle = Box.new mycircle -> Box Circle
+let nonsense = mycircle.radius * mycircle.area
+```
+
+
+Implementations
+--------------------------------------------------------------------------------
 An *implementation* is an item that implements a [trait](#traits) for a
 specific type.
 
@@ -961,6 +1061,24 @@ impl Shape for Circle {
          width: 2.0 * r, height: 2.0 * r}
     }
 }
+```
+
+In haskell-style dialect of rust
+
+```{.haskell}
+data Circle = Circle { radiuis:f64
+                     , center:Point
+                     }
+
+impl Copy Circle where
+
+impl Clone Circle where
+    clone &self = *self
+    
+impl Shape Circle where
+    draw &@ s = do_draw_circle s *@
+    bounding_box &@ = let r = @.radius
+                      BoundingBox {x=@.center.x, y=@.center.y, width=2.0*r, height=2.0*r}
 ```
 
 It is possible to define an implementation without referring to a trait.
@@ -1039,8 +1157,9 @@ The type of a function declared in an extern block is
 `extern "abi" fn(A1, ..., An) -> R`, where `A1...An` are the declared
 types of its arguments and `R` is the declared return type.
 
-[6.2 Visibility and Privacy](#visibility-and-privacy) {#visibility-and-privacy .section-header}
------------------------------------------------------
+
+Visibility and Privacy
+--------------------------------------------------------------------------------
 
 These two terms are often used interchangeably, and what they are
 attempting to convey is the answer to the question "Can this item be
