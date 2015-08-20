@@ -1,9 +1,16 @@
 Haskell-style Dialect of Rust [Working Draft]
 ================================================================================
 Bringing the terseness of Haskell to Rust.
+The purpose is to recude the number of characters as much as possible.
 
-Example Conversions
-================================================================================
+Some Symbol Shortcuts
+--------------------------------------------------------------------------------
+*   `^` extern
+*   `@` crate
+*   `+` public
+*   `-` private
+*   `#` protected
+*   `->` as
 
 Modules
 --------------------------------------------------------------------------------
@@ -32,13 +39,13 @@ mod math where
 type Complex = (f64, f64)
 
 sin :: f64 -> f64
-sin f = /* ... */
+sin f = {- ... -}
 
 cos :: f64 -> f64
-cos f = /* ... */
+cos f = {- ... -}
 
 tan :: f64 -> f64
-tan f = /* ... */
+tan f = {- ... -}
 ```
 
 A module without a body is loaded from an external file, by default with
@@ -106,11 +113,11 @@ extern crate std as ruststd; // linking to 'std' under another name
 The same example rewritten in haskell-style dialect of rust:
 
 ```{.haskell}
-extern crate pcre
+@^pcre
 
-extern crate std
+@^std
 
-extern crate std as ruststd
+@^std -> ruststd
 ```
 
 #### [6.1.2.2 Use declarations](#use-declarations) {#use-declarations .section-header}
@@ -122,7 +129,7 @@ Rebinding the target name as a new local name, using the syntax
 The same example rewritten in haskell-style dialect of rust:
 
 ```{.haskell}
-use p.q.r as x
+use p.q.r -> x
 ```
 
 Simultaneously binding a list of paths differing only in their final element,
@@ -180,8 +187,8 @@ fn main() {
 The same example rewritten in haskell-style dialect of rust:
 
 ```{.haskell}
-use std.option.Option        (Some, None)
-use std.collections.hash_map (self, HashMap)
+use std.option.Option        (Some None)
+use std.collections.hash_map (self HashMap)
 
 foo : T -> ()
 foo _ = ()
@@ -265,6 +272,34 @@ mod foo {
 }
 
 fn main() {}
+```
+
+The same example rewritten in haskell-style dialect of rust:
+
+```{.haskell}
+use foo.baz.foobaz
+
+mod foo
+
+    mod example
+        mod iter +
+        
+    use foo.example.iter    --good: foo is at crate root
+    -- use example.iter     --bad:  core is not at the crate root
+    use self.baz.foobaz     --good: self refers to module 'foo'
+    use foo.bar.foobar      --good: foo is at crate root
+    
+    mod bar +
+        foobar : () +
+        foobar = ()
+    
+    mod baz +
+        use super.bar.foobar    --good: super refers to module 'foo'
+        foobaz : () +
+        foobaz = ()
+        
+main : ()
+main = ()
 ```
 
 ### [6.1.3 Functions](#functions) {#functions .section-header}
@@ -1079,6 +1114,17 @@ pub enum State {
 }
 ```
 
+The same example rewritten in haskell-style dialect of rust:
+
+```{.haskell}
+Foo-
+-- or just Foo
+
+Bar+ field:i32
+
+State = PubliclyAccessibleState | PubliclyAccessibleState2
+```
+
 With the notion of an item being either public or private, Rust allows
 item accesses in two cases:
 
@@ -1191,6 +1237,18 @@ mod implementation {
     }
 }
 ```
+
+The same example rewritten in haskell-style dialect of rust:
+
+```{.haskell}
+use self.implementation.api +
+
+mod implementation
+    mod api +
+        f : () +
+        f = ()
+```
+
 
 This means that any external crate referencing `implementation::api::f`
 would receive a privacy violation, while the path `api::f` would be
@@ -1621,6 +1679,13 @@ form:
 ``` {.rust .rust-example-rendered}
 #![feature(feature1, feature2, feature3)]
 ```
+
+The same example rewritten in haskell-style dialect of rust:
+
+```{.haskell}
+#!
+```
+
 
 This directive informs the compiler that the feature list: `feature1`,
 `feature2`, and `feature3` should all be enabled. This is only
