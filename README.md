@@ -1,16 +1,20 @@
 Haskell-style Dialect of Rust [Working Draft]
 ================================================================================
-Bringing the terseness of Haskell to Rust.
-The purpose is to recude the number of characters as much as possible.
+This dialect is just an alternate syntax for Rust in order to bring the
+terseness of Haskell to the Rust land.
+The purpose is to reduce the number of characters to be typed as well as enhance
+the legibility of the code.
 
-Some Symbol Shortcuts
+Some Symbols
 --------------------------------------------------------------------------------
 *   `^` extern
 *   `@` crate
+*   `#` mut
 *   `+` public
 *   `-` private
 *   `#` protected
 *   `->` as
+*   `=>` where
 
 Modules
 --------------------------------------------------------------------------------
@@ -34,18 +38,18 @@ mod math {
 The same example rewritten in haskell-style dialect of rust:
 
 ```{.haskell}
-mod math where
+mod math =>
 
-type Complex = (f64, f64)
-
-sin :: f64 -> f64
-sin f = {- ... -}
-
-cos :: f64 -> f64
-cos f = {- ... -}
-
-tan :: f64 -> f64
-tan f = {- ... -}
+    type Complex = (f64, f64)
+    
+    sin : f64 -> f64
+    sin f = {- ... -}
+    
+    cos : f64 -> f64
+    cos f = {- ... -}
+    
+    tan : f64 -> f64
+    tan f = {- ... -}
 ```
 
 A module without a body is loaded from an external file, by default with
@@ -69,7 +73,7 @@ The same example rewritten in haskell-style dialect of rust:
 ```{.haskell}
 mod vec
 
-mod thread
+mod thread =>
     -- indentation is significant here
     -- Load the `local_data` module from `thread/local_data.rs`
     -- or `thread/local_data/mod.rs`.
@@ -92,7 +96,7 @@ The same example rewritten in haskell-style dialect of rust:
 
 ```{.haskell}
 #path=thread_files
-mod thread
+mod thread =>
     -- Load the `local_data` module from `thread_files/tls.rs`
     #path=tls.rs
     mod local_data
@@ -221,29 +225,16 @@ mod quux {
 The same example rewritten in haskell-style dialect of rust:
 
 ```{.haskell}
-mod quux
+mod quux =>
+    use quux.foo.{bar,baz} +
 
-use quux.foo.{bar,baz} +
-
-mod foo +
-    bar : () +
-    bar = ()
-    
-    baz : () +
-    baz = ()
+    mod foo + =>
+        bar : () +
+        bar = ()
+        
+        baz : () +
+        baz = ()
 ```
-
-Note: + is public; - is private; and # is protected
-
-Also note that the paths contained in `use` items are relative to the
-crate root. So, in the previous example, the `use` refers to
-`quux::foo::{bar, baz}`, and not simply to `foo::{bar, baz}`. This also
-means that top-level module declarations should be at the crate root if
-direct usage of the declared modules within `use` items is desired. It
-is also possible to use `self` and `super` at the beginning of a `use`
-item to refer to the current and direct parent modules respectively. All
-rules regarding accessing declared modules in `use` declarations apply
-to both module declarations and `extern crate` declarations.
 
 An example of what will and will not work for `use` items:
 
@@ -279,21 +270,21 @@ The same example rewritten in haskell-style dialect of rust:
 ```{.haskell}
 use foo.baz.foobaz
 
-mod foo
+mod foo =>
 
-    mod example
-        mod iter +
+    mod example =>
+        mod iter + =>
         
     use foo.example.iter    --good: foo is at crate root
     -- use example.iter     --bad:  core is not at the crate root
     use self.baz.foobaz     --good: self refers to module 'foo'
     use foo.bar.foobar      --good: foo is at crate root
     
-    mod bar +
+    mod bar + =>
         foobar : () +
         foobar = ()
     
-    mod baz +
+    mod baz + =>
         use super.bar.foobar    --good: super refers to module 'foo'
         foobaz : () +
         foobaz = ()
@@ -302,27 +293,8 @@ main : ()
 main = ()
 ```
 
-### [6.1.3 Functions](#functions) {#functions .section-header}
-
-A *function item* defines a sequence of [statements](#statements) and an
-optional final [expression](#expressions), along with a name and a set
-of parameters. Functions are declared with the keyword `fn`. Functions
-declare a set of *input* [*variables*](#variables) as parameters,
-through which the caller passes arguments into the function, and the
-*output* [*type*](#types) of the value the function will return to its
-caller on completion.
-
-A function may also be copied into a first-class *value*, in which case
-the value has the corresponding [*function type*](#function-types), and
-can be used otherwise exactly as a function item (with a minor
-additional cost of calling the function indirectly).
-
-Every control path in a function logically ends with a `return`
-expression or a diverging expression. If the outermost block of a
-function has a value-producing expression in its final-expression
-position, that expression is interpreted as an implicit `return`
-expression applied to the final-expression.
-
+Functions
+--------------------------------------------------------------------------------
 An example of a function:
 
 ``` {.rust .rust-example-rendered}
@@ -334,7 +306,7 @@ fn add(x: i32, y: i32) -> i32 {
 In haskell-style dialect of rust
 
 ```{.haskell}
-add :: i32 -> i32 -> i32
+add : i32 -> i32 -> i32
 add x y = x + y
 ```
 
@@ -348,16 +320,14 @@ fn first((value, _): (i32, i32)) -> i32 { value }
 In haskell-style dialect of rust
 
 ```{.haskell}
-first :: (i32, i32) -> i32
+first : (i32, i32) -> i32
 first (value, _) = value
 ```
 
-#### [6.1.3.1 Generic functions](#generic-functions) {#generic-functions .section-header}
 
-A *generic function* allows one or more *parameterized types* to appear
-in its signature. Each type parameter must be explicitly declared, in an
-angle-bracket-enclosed, comma-separated list following the function
-name.
+### Generic functions
+
+An example of a generic function:
 
 ``` {.rust .rust-example-rendered}
 // foo is generic over A and B
@@ -368,7 +338,7 @@ fn foo<A, B>(x: A, y: B) {
 In haskell-style dialect of rust
 
 ```{.haskell}
-foo :: A -> B -> ()
+foo : A -> B -> ()
 foo x y =
 ```
 
@@ -384,7 +354,7 @@ fn foo<T>(x: T) where T: Debug {
 In haskell-style dialect of rust
 
 ```{.haskell}
-foo :: Debug T => T -> ()
+foo : Debug T => T -> ()
 foo x =
 ```
 
@@ -402,125 +372,23 @@ fn foo<T>(x: &[T]) where T: Debug {
 foo(&[1, 2]);
 ```
 
+will instantiate type parameter `T` with `i32`.
 In haskell-style dialect of rust
 
 ```{.haskell}
-foo :: Debug T => &[T] -> ()
-foo x = // details
+foo : Debug T => &[T] -> ()
+foo x = --details
 
 foo &[1, 2]
 ```
-
-will instantiate type parameter `T` with `i32`.
 
 The type parameters can also be explicitly supplied in a trailing
 [path](#paths) component after the function name. This might be
 necessary if there is not sufficient context to determine the type
 parameters. For example, `mem::size_of::<u32>() == 4`.
 
-#### [6.1.3.2 Unsafety](#unsafety) {#unsafety .section-header}
 
-Unsafe operations are those that potentially violate the memory-safety
-guarantees of Rust's static semantics.
-
-The following language level features cannot be used in the safe subset
-of Rust:
-
--   Dereferencing a [raw pointer](#pointer-types).
--   Reading or writing a [mutable static variable](#mutable-statics).
--   Calling an unsafe function (including an intrinsic or
-    foreign function).
-
-##### [6.1.3.2.1 Unsafe functions](#unsafe-functions) {#unsafe-functions .section-header}
-
-Unsafe functions are functions that are not safe in all contexts and/or
-for all possible inputs. Such a function must be prefixed with the
-keyword `unsafe` and can only be called from an `unsafe` block or
-another `unsafe` function.
-
-##### [6.1.3.2.2 Unsafe blocks](#unsafe-blocks) {#unsafe-blocks .section-header}
-
-A block of code can be prefixed with the `unsafe` keyword, to permit
-calling `unsafe` functions or dereferencing raw pointers within a safe
-function.
-
-When a programmer has sufficient conviction that a sequence of
-potentially unsafe operations is actually safe, they can encapsulate
-that sequence (taken as a whole) within an `unsafe` block. The compiler
-will consider uses of such code safe, in the surrounding context.
-
-Unsafe blocks are used to wrap foreign libraries, make direct use of
-hardware or implement features not directly present in the language. For
-example, Rust provides the language features necessary to implement
-memory-safe concurrency in the language but the implementation of
-threads and message passing is in the standard library.
-
-Rust's type system is a conservative approximation of the dynamic safety
-requirements, so in some cases there is a performance cost to using safe
-code. For example, a doubly-linked list is not a tree structure and can
-only be represented with reference-counted pointers in safe code. By
-using `unsafe` blocks to represent the reverse links as raw pointers, it
-can be implemented with only boxes.
-
-##### [6.1.3.2.3 Behavior considered undefined](#behavior-considered-undefined) {#behavior-considered-undefined .section-header}
-
-The following is a list of behavior which is forbidden in all Rust code,
-including within `unsafe` blocks and `unsafe` functions. Type checking
-provides the guarantee that these issues are never caused by safe code.
-
--   Data races
--   Dereferencing a null/dangling raw pointer
--   Reads of
-    [undef](http://llvm.org/docs/LangRef.html#undefined-values) (uninitialized)
-    memory
--   Breaking the [pointer aliasing
-    rules](http://llvm.org/docs/LangRef.html#pointer-aliasing-rules)
-    with raw pointers (a subset of the rules used by C)
--   `&mut` and `&` follow LLVM’s scoped
-    [noalias](http://llvm.org/docs/LangRef.html#noalias) model, except
-    if the `&T` contains an `UnsafeCell<U>`. Unsafe code must not
-    violate these aliasing guarantees.
--   Mutating non-mutable data (that is, data reached through a shared
-    reference or data owned by a `let` binding), unless that data is
-    contained within an `UnsafeCell<U>`.
--   Invoking undefined behavior via compiler intrinsics:
-    -   Indexing outside of the bounds of an object with
-        `std::ptr::offset` (`offset` intrinsic), with the exception of
-        one byte past the end which is permitted.
-    -   Using `std::ptr::copy_nonoverlapping_memory`
-        (`memcpy32`/`memcpy64` intrinsics) on overlapping buffers
--   Invalid values in primitive types, even in private fields/locals:
-    -   Dangling/null references or boxes
-    -   A value other than `false` (0) or `true` (1) in a `bool`
-    -   A discriminant in an `enum` not included in the type definition
-    -   A value in a `char` which is a surrogate or above `char::MAX`
-    -   Non-UTF-8 byte sequences in a `str`
--   Unwinding into Rust from foreign code or unwinding from Rust into
-    foreign code. Rust's failure system is not compatible with exception
-    handling in other languages. Unwinding must be caught and handled at
-    FFI boundaries.
-
-##### [6.1.3.2.4 Behavior not considered unsafe](#behavior-not-considered-unsafe) {#behavior-not-considered-unsafe .section-header}
-
-This is a list of behavior not considered *unsafe* in Rust terms, but
-that may be undesired.
-
--   Deadlocks
--   Reading data from private fields (`std::repr`)
--   Leaks of memory and other resources
--   Exiting without calling destructors
--   Sending signals
--   Accessing/modifying the file system
--   Integer overflow
-    -   Overflow is considered "unexpected" behavior and is always
-        user-error, unless the `wrapping` primitives are used. In
-        non-optimized builds, the compiler will insert debug checks that
-        panic on overflow, but in optimized builds overflow instead
-        results in wrapped values. See [RFC
-        560](https://github.com/rust-lang/rfcs/blob/master/text/0560-integer-overflow.md)
-        for the rationale and more details.
-
-#### [6.1.3.3 Diverging functions](#diverging-functions) {#diverging-functions .section-header}
+### Diverging functions
 
 A special kind of function can be declared with a `!` character where
 the output type would normally be. For example:
@@ -532,10 +400,20 @@ fn my_err(s: &str) -> ! {
 }
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+my_err : &str -> !
+my_err s = println! "{}" s
+           panic!
+```
+
 We call such functions "diverging" because they never return a value to
-the caller. Every control path in a diverging function must end with a
+the caller.
+Every control path in a diverging function must end with a
 `panic!()` or a call to another diverging function on every control
-path. The `!` annotation does *not* denote a type.
+path.
+The `!` annotation does *not* denote a type.
 
 It might be necessary to declare a diverging function because as
 mentioned previously, the typechecker checks that every control path in
@@ -555,6 +433,15 @@ fn f(i: i32) -> i32 {
 }
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+f : i32 -> i32
+f i
+  | i == 42 = 42
+  else      = my_err "Bad number!"
+```
+
 This will not compile without the `!` annotation on `my_err`, since the
 `else` branch of the conditional in `f` does not return an `i32`, as
 required by the signature of `f`. Adding the `!` annotation to `my_err`
@@ -563,7 +450,8 @@ further type judgments about `f` need to hold, since control will never
 resume in any context that relies on those judgments. Thus the return
 type on `f` only needs to reflect the `if` branch of the conditional.
 
-#### [6.1.3.4 Extern functions](#extern-functions) {#extern-functions .section-header}
+
+### Extern functions
 
 Extern functions are part of Rust's foreign function interface,
 providing the opposite functionality to [external
@@ -580,6 +468,18 @@ extern fn new_i32() -> i32 { 0 }
 extern "stdcall" fn new_i32_stdcall() -> i32 { 0 }
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+--Declares an extern fn, the ABI defaults to "C"
+new_i32 : i32 ^
+new_i32 = 0
+
+--Declares an extern fn with "stdcall" ABI
+new_i32_stdcall : i32 ^stdcall
+new_i32_stdcall = 0
+```
+
 Unlike normal functions, extern fns have type `extern "ABI" fn()`. This
 is the same type as the functions declared in an extern block.
 
@@ -587,35 +487,53 @@ is the same type as the functions declared in an extern block.
 let fptr: extern "C" fn() -> i32 = new_i32;
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+
+```
+
 Extern functions may be called directly from Rust code as Rust uses
 large, contiguous stack segments like C.
 
-### [6.1.4 Type aliases](#type-aliases) {#type-aliases .section-header}
 
-A *type alias* defines a new name for an existing [type](#types). Type
-aliases are declared with the keyword `type`. Every value has a single,
-specific type, but may implement several different traits, or be
-compatible with several different type constraints.
-
-For example, the following defines the type `Point` as a synonym for the
-type `(u8, u8)`, the type of pairs of unsigned 8 bit integers:
+Type aliases
+--------------------------------------------------------------------------------
+The following defines the type `Point` as a synonym for the type `(u8, u8)`,
+the type of pairs of unsigned 8 bit integers:
 
 ``` {.rust .rust-example-rendered}
 type Point = (u8, u8);
 let p: Point = (41, 68);
 ```
 
-### [6.1.5 Structures](#structures) {#structures .section-header}
+In haskell-style dialect of rust
 
-A *structure* is a nominal [structure type](#structure-types) defined
-with the keyword `struct`.
+```{.haskell}
+type Point = (u8, u8);
+let p = Point (41, 68);
+```
 
+
+Structures
+--------------------------------------------------------------------------------
+A *structure* is a nominal structure type defined with the keyword `struct`.
 An example of a `struct` item and its use:
 
 ``` {.rust .rust-example-rendered}
 struct Point {x: i32, y: i32}
 let p = Point {x: 10, y: 11};
 let px: i32 = p.x;
+```
+
+In haskell-style dialect of rust
+
+```{.haskell}
+--data Point = Point i32 i32
+data Point = Point { x:i32
+                   , y:i32
+                   }
+let p = Point {x=10, y=11};
 ```
 
 A *tuple structure* is a nominal [tuple type](#tuple-types), also
@@ -627,6 +545,16 @@ let p = Point(10, 11);
 let px: i32 = match p { Point(x, _) => x };
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+data Point = Point (i32, i32)
+let p = Point (10, 11)
+let px = match p {
+            Point (x,_) => x
+         }
+```
+
 A *unit-like struct* is a structure without any fields, defined by
 leaving off the list of fields entirely. Such types will have a single
 value. For example:
@@ -636,12 +564,19 @@ struct Cookie;
 let c = [Cookie, Cookie, Cookie, Cookie];
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+data Cookie
+let c = [Cookie, Cookie, Cookie, Cookie]
+```
+
 The precise memory layout of a structure is not specified. One can
-specify a particular layout using the [`repr`
-attribute](#ffi-attributes).
+specify a particular layout using the [`repr` attribute](#ffi-attributes).
 
-### [6.1.6 Enumerations](#enumerations) {#enumerations .section-header}
 
+Enumerations
+--------------------------------------------------------------------------------
 An *enumeration* is a simultaneous definition of a nominal [enumerated
 type](#enumerated-types) as well as a set of *constructors*, that can be
 used to create or pattern-match values of the corresponding enumerated
@@ -661,6 +596,14 @@ let mut a: Animal = Animal::Dog;
 a = Animal::Cat;
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+data Animal = Dog | Cat
+let *a = Dog
+a = Cat
+```
+
 Enumeration constructors can have either named or unnamed fields:
 
 ``` {.rust .rust-example-rendered}
@@ -671,6 +614,14 @@ enum Animal {
 
 let mut a: Animal = Animal::Dog("Cocoa".to_string(), 37.2);
 a = Animal::Cat { name: "Spotty".to_string(), weight: 2.7 };
+```
+
+In haskell-style dialect of rust
+
+```{.haskell}
+data Animal = Dog String f64 | Cat { name:String, weight:f64 }
+let *a = Dog "Cocoa" 37.2
+a = Cat {name="Spotty", weight=2.7}
 ```
 
 In this example, `Cat` is a *struct-like enum variant*, whereas `Dog` is
@@ -684,6 +635,12 @@ enum Foo {
 }
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+data Foo = Bar[123]
+```
+
 If a discriminant isn't assigned, they start at zero, and add one for
 each variant, in order.
 
@@ -693,11 +650,18 @@ You can cast an enum to get this value:
 let x = Foo::Bar as u32; // x is now 123u32
 ```
 
+In haskell-style dialect of rust
+
+```{.haskell}
+let x = Bar -> u32
+```
+
 This only works as long as none of the variants have data attached. If
 it were `Bar(i32)`, this is disallowed.
 
-### [6.1.7 Constant items](#constant-items) {#constant-items .section-header}
 
+Constant items
+--------------------------------------------------------------------------------
 A *constant item* is a named *constant value* which is not associated
 with a specific memory location in the program. Constants are
 essentially inlined wherever they are used, meaning that they are copied
