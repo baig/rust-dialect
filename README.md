@@ -798,9 +798,9 @@ trait Shape {
 In haskell-style dialect of rust
 
 ```{.haskell}
-trait Shape =>
-    draw : &self -> Surface -> ()
-    bounding_box : &self -> BoundingBox
+trait Shape where
+    draw : &@ -> Surface -> ()
+    bounding_box : &@ -> BoundingBox
 ```
 
 This defines a trait with two methods. All values that have
@@ -821,8 +821,8 @@ In haskell-style dialect of rust
 
 ```{.haskell}
 trait Foo =>
-    bar : &self -> ()
-    baz : &self -> ()
+    bar : &@ -> ()
+    baz : &@ -> ()
     baz = println! "We called baz."
 ```
 
@@ -847,10 +847,9 @@ In haskell-style dialect of rust
 
 ```{.haskell}
 trait Seq T =>
-    len : &self -> u32
-    elt_at : &self -> u32 -> T
-    iter : Fn(T) F => &self -> F -> ()
-    baz = println! "We called baz."
+    len : &@ -> u32
+    elt_at : &@ -> u32 -> T
+    iter : Fn(T) F => &@ -> F -> ()
 ```
 
 It is also possible to define associated types for a trait. Consider the
@@ -988,10 +987,8 @@ trait Circle : Shape { fn radius(&self) -> f64; }
 In haskell-style dialect of rust
 
 ```{.haskell}
-trait Shape where
-    area : &self -> f64
-trait Shape => Circle where
-    radius : &self -> f64
+trait Shape where area : &@ -> f64
+trait Shape => Circle where radius : &@ -> f64
 ```
 
 the syntax `Circle : Shape` means that types that implement `Circle`
