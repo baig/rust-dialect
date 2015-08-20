@@ -1,4 +1,4 @@
-Haskell-style Dialect of Rust
+Haskell-style Dialect of Rust [Working Draft]
 ================================================================================
 Bringing the terseness of Haskell to Rust.
 
@@ -115,28 +115,47 @@ extern crate std as ruststd
 
 #### [6.1.2.2 Use declarations](#use-declarations) {#use-declarations .section-header}
 
-A *use declaration* creates one or more local name bindings synonymous
-with some other [path](#paths). Usually a `use` declaration is used to
-shorten the path required to refer to a module item. These declarations
-may appear at the top of [modules](#modules) and
-[blocks](grammar.html#block-expressions).
+Rebinding the target name as a new local name, using the syntax
 
-> **Note**: Unlike in many languages, `use` declarations in Rust do
-> *not* declare linkage dependency with external crates. Rather,
-> [`extern crate` declarations](#extern-crate-declarations) declare
-> linkage dependencies.
+`use p::q::r as x;`
 
-Use declarations support a number of convenient shortcuts:
+The same example rewritten in haskell-style dialect of rust:
 
--   Rebinding the target name as a new local name, using the syntax
-    `use p::q::r as x;`
--   Simultaneously binding a list of paths differing only in their final
-    element, using the glob-like brace syntax `use a::b::{c,d,e,f};`
--   Binding all paths matching a given prefix, using the asterisk
-    wildcard syntax `use a::b::*;`
--   Simultaneously binding a list of paths differing only in their final
-    element and their immediate parent module, using the `self` keyword,
-    such as `use a::b::{self, c, d};`
+```{.haskell}
+use p.q.r as x
+```
+
+Simultaneously binding a list of paths differing only in their final element,
+using the glob-like brace syntax
+
+`use a::b::{c,d,e,f};`
+
+The same example rewritten in haskell-style dialect of rust:
+
+```{.haskell}
+use a.b.{c,d,e,f}
+```
+
+Binding all paths matching a given prefix, using the asterisk wildcard syntax
+
+`use a::b::*;`
+
+The same example rewritten in haskell-style dialect of rust:
+
+```{.haskell}
+use a.b.*
+```
+
+Simultaneously binding a list of paths differing only in their final element and
+their immediate parent module, using the `self` keyword, such as
+
+`use a::b::{self, c, d};`
+
+The same example rewritten in haskell-style dialect of rust:
+
+```{.haskell}
+use a.b.{self,c,d}
+```
 
 An example of `use` declarations:
 
@@ -158,16 +177,28 @@ fn main() {
 }
 ```
 
-Like items, `use` declarations are private to the containing module, by
-default. Also like items, a `use` declaration can be public, if
-qualified by the `pub` keyword. Such a `use` declaration serves to
-*re-export* a name. A public `use` declaration can therefore *redirect*
-some public name to a different target definition: even a definition
-with a private canonical path, inside a different module. If a sequence
-of such redirections form a cycle or cannot be resolved unambiguously,
-they represent a compile-time error.
+The same example rewritten in haskell-style dialect of rust:
 
-An example of re-exporting:
+```{.haskell}
+use std.option.Option        (Some, None)
+use std.collections.hash_map (self, HashMap)
+
+foo : T -> ()
+foo _ = ()
+
+bar : HashMap String usize -> hash_map.HashMap String usize -> ()
+bar map1 map2 = ()
+
+main : ()
+main = foo vec![Some 1.0f64, None]
+       let map1 = HashMap.new
+       let map2 = hash_map.HashMap.new
+       bar map1 map2
+
+```
+
+An example of re-exporting.
+In this example, the module `quux` re-exports two public names defined in `foo`.
 
 ``` {.rust .rust-example-rendered}
 mod quux {
@@ -180,8 +211,22 @@ mod quux {
 }
 ```
 
-In this example, the module `quux` re-exports two public names defined
-in `foo`.
+The same example rewritten in haskell-style dialect of rust:
+
+```{.haskell}
+mod quux
+
+use quux.foo.{bar,baz} +
+
+mod foo +
+    bar : () +
+    bar = ()
+    
+    baz : () +
+    baz = ()
+```
+
+Note: + is public; - is private; and # is protected
 
 Also note that the paths contained in `use` items are relative to the
 crate root. So, in the previous example, the `use` refers to
