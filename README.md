@@ -1,9 +1,6 @@
 Haskell-style Dialect of Rust [Working Draft]
 ================================================================================
-This dialect is just an alternate syntax for Rust in order to bring the
-terseness of Haskell to the Rust land.
-The purpose is to reduce the number of characters to be typed as well as enhance
-the legibility of the code.
+This dialect is just an alternate syntax for Rust in order to bring the terseness of Haskell to the Rust land. The main goal is to enhance the readability of the language syntax. The readability of the language matters because a typical developer spends more time reading the code than writing it.
 
 Some Symbols
 --------------------------------------------------------------------------------
